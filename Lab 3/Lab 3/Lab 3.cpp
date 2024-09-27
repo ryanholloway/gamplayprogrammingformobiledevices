@@ -53,7 +53,7 @@ int main()
 		}
 		codeIndex--;
 		
-		cout << "\n\n\n";
+		cout << "\n";
 	}
 	
 	
