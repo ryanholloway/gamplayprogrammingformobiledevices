@@ -40,7 +40,7 @@ int main()
 			FindAllVariables(variables, test);
 			break;
 		case 2:
-			FindAllVariablesInScope(variables, test, 3);
+			FindAllVariablesInScope(variables, test, 5);
 			break;
 		default:
 			break;
@@ -51,6 +51,8 @@ int main()
 			cout << variables[codeIndex];
 			codeIndex++;
 		}
+		codeIndex--;
+		
 		cout << "\n\n\n";
 	}
 	
