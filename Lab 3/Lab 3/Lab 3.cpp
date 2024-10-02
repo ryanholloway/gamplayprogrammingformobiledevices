@@ -30,10 +30,12 @@ int main()
 		cin >> num;
 	}
 	
-
+	int whichTest = 1;
 	for (auto test: testCases)
 	{
+		
 		char variables[1000] = "";
+		cout << "Test: " << whichTest << endl;
 		switch (num)
 		{
 		case 1:
@@ -52,7 +54,7 @@ int main()
 			codeIndex++;
 		}
 		codeIndex--;
-		
+		whichTest++;
 		cout << "\n";
 	}
 	

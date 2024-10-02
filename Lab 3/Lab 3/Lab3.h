@@ -36,6 +36,10 @@ void FindAllVariables(char variables[1000], char code[1000])
 		}
 		codeIndex++;
 	}
+	if (variables[variableIndex - 1] == ',')
+	{
+		variables[variableIndex - 1] = '\0';
+	}
 }
 void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumber)
 {
@@ -44,14 +48,19 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 	int variableIndex = 0;
 	bool inFunction = false;
 	int countLines = 0;
+	bool notEnd = true;
 	while (code[codeIndex] != '\0')
 	{
 		if (code[codeIndex] == '\n'&&countLines<lineNumber)
 		{
 			countLines++;
 		}
-		if (countLines == lineNumber)
+		if (countLines == lineNumber&&notEnd)
 		{
+			if (code[codeIndex] == '}')
+			{
+				notEnd = false;
+			}
 			if ((code[codeIndex] == 'i' && code[codeIndex + 1] == 'n' && code[codeIndex + 2] == 't') ||
 				(code[codeIndex] == 'c' && code[codeIndex + 1] == 'h' && code[codeIndex + 2] == 'a' && code[codeIndex + 3] == 'r'))
 			{
@@ -71,9 +80,13 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 				}
 				variables[variableIndex] = ',';
 				variableIndex++;
-
+				
 			}
 		}
 		codeIndex++;
+	}
+	if (variables[variableIndex - 1] == ',')
+	{
+		variables[variableIndex - 1] = '\0';
 	}
 }
