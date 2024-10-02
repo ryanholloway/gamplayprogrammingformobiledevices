@@ -13,7 +13,7 @@ int main()
 	char code7[1000] = "void example() \n{ \n int counter = 0;\n if(counter == 0)\n {\n int step = 1;\n }\n char letter = 'Z';\n}\n";
 	char code8[1000] = "int test() \n{ \n int var1;\n char var2;\n if(var1 == 1)\n {\n int innerVar = 20;\n }\n}\n";
 	char code9[1000] = "int main()\n{\nint numElephants=10;\nint var2=10;\nif(var2<10)\n{\nint var3=20;\n}\nwhile(var2<0)\n{\nint var4;\n}\nint var5=10\n}";
-	
+
 	testCases.push_back(code1);
 	testCases.push_back(code2);
 	testCases.push_back(code3);
@@ -30,11 +30,11 @@ int main()
 	{
 		cin >> num;
 	}
-	
+
 	int whichTest = 1;
-	for (auto test: testCases)
+	for (auto test : testCases)
 	{
-		
+
 		char variables[1000] = "";
 		cout << "Test: " << whichTest << endl;
 		switch (num)
@@ -62,10 +62,10 @@ int main()
 		whichTest++;
 		cout << "\n";
 	}
-	
-	
-	
-	
+
+
+
+
 
 }
 

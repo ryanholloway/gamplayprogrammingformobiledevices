@@ -5,8 +5,8 @@ void FindAllVariables(char variables[1000], char code[1000])
 {
 	int codeIndex = 0;
 	int variableIndex = 0;
-	bool inFunction = false;
-	while (code[codeIndex]!='\0')
+	int inFunction = false;
+	while (code[codeIndex] != '\0')
 	{
 		if (code[codeIndex] == '{')
 		{
@@ -29,7 +29,7 @@ void FindAllVariables(char variables[1000], char code[1000])
 					variableIndex++;
 					codeIndex++;
 				}
-				variables[variableIndex] = ',' ;
+				variables[variableIndex] = ',';
 				variableIndex++;
 
 			}
@@ -44,12 +44,12 @@ void FindAllVariables(char variables[1000], char code[1000])
 }
 void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumber)
 {
-	
 	int codeIndex = 0;
 	int variableIndex = 0;
-	bool inFunction = false;
+	int inFunction = false;
 	int countLines = 0;
-	bool notEnd = true;
+	int notEnd = true;
+	int ignore = false;
 	while (code[codeIndex] != '\0')
 	{
 		if (code[codeIndex] == '\n')
@@ -61,7 +61,7 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 			inFunction = true;
 		}
 		//only check if you are in a function and if its above the line number
-		if (inFunction&&countLines<lineNumber)
+		if (inFunction && countLines < lineNumber && ignore != 1)
 		{
 			if ((code[codeIndex] == 'i' && code[codeIndex + 1] == 'n' && code[codeIndex + 2] == 't') || (code[codeIndex] == 'c' && code[codeIndex + 1] == 'h' && code[codeIndex + 2] == 'a' && code[codeIndex + 3] == 'r'))
 			{
