@@ -50,18 +50,25 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 	int countLines = 0;
 	int notEnd = true;
 	int ignore = false;
+	int countBrack = 0;
 	while (code[codeIndex] != '\0')
 	{
 		if (code[codeIndex] == '\n')
 		{
 			countLines++;
 		}
-		if (code[codeIndex] == '{')
+		if (inFunction && code[codeIndex] == '{')
+		{
+			ignore = true;
+			countBrack++;
+		}
+		else if (code[codeIndex] == '{')
 		{
 			inFunction = true;
 		}
+
 		//only check if you are in a function and if its above the line number
-		if (inFunction && countLines < lineNumber && ignore != 1)
+		if (inFunction && countLines <= lineNumber && !ignore)
 		{
 			if ((code[codeIndex] == 'i' && code[codeIndex + 1] == 'n' && code[codeIndex + 2] == 't') || (code[codeIndex] == 'c' && code[codeIndex + 1] == 'h' && code[codeIndex + 2] == 'a' && code[codeIndex + 3] == 'r'))
 			{
@@ -82,6 +89,13 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 				variableIndex++;
 
 			}
+		}
+		if (ignore && code[codeIndex] == '}')
+		{
+			countBrack--;
+
+			if (countBrack <= 0)
+				ignore = false;
 		}
 		codeIndex++;
 	}
