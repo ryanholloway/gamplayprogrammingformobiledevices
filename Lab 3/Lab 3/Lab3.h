@@ -36,6 +36,7 @@ void FindAllVariables(char variables[1000], char code[1000])
 		}
 		codeIndex++;
 	}
+	//if the last char is a comma remove it
 	if (variables[variableIndex - 1] == ',')
 	{
 		variables[variableIndex - 1] = '\0';
@@ -59,6 +60,7 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 		{
 			inFunction = true;
 		}
+		//only check if you are in a function and if its above the line number
 		if (inFunction&&countLines<lineNumber)
 		{
 			if ((code[codeIndex] == 'i' && code[codeIndex + 1] == 'n' && code[codeIndex + 2] == 't') || (code[codeIndex] == 'c' && code[codeIndex + 1] == 'h' && code[codeIndex + 2] == 'a' && code[codeIndex + 3] == 'r'))
@@ -83,6 +85,7 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 		}
 		codeIndex++;
 	}
+	//if the last char is a comma remove it
 	if (variables[variableIndex - 1] == ',')
 	{
 		variables[variableIndex - 1] = '\0';
