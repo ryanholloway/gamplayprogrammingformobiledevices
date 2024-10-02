@@ -12,6 +12,7 @@ int main()
 	char code6[1000] = "void process() \n{ \n char flag = 'Y';\n int count = 10;\n if(flag == 'Y') \n {\n char status = 'N';\n }\n}\n";
 	char code7[1000] = "void example() \n{ \n int counter = 0;\n if(counter == 0)\n {\n int step = 1;\n }\n char letter = 'Z';\n}\n";
 	char code8[1000] = "int test() \n{ \n int var1;\n char var2;\n if(var1 == 1)\n {\n int innerVar = 20;\n }\n}\n";
+	char code9[1000] = "int main()\n{\nint numElephants=10;\nint var2=10;\nif(var2<10)\n{\nint var3=20;\n}\nwhile(var2<0)\n{\nint var4;\n}\nint var5=10\n}";
 	
 	testCases.push_back(code1);
 	testCases.push_back(code2);
@@ -21,7 +22,7 @@ int main()
 	testCases.push_back(code6);
 	testCases.push_back(code7);
 	testCases.push_back(code8);
-	
+	testCases.push_back(code9);
 	//chose testcase
 	int num = 0;
 	cout << "Chose test case\n1. All Variables\n2. All Variables In Scope\n";
@@ -42,7 +43,7 @@ int main()
 			FindAllVariables(variables, test);
 			break;
 		case 2:
-			FindAllVariablesInScope(variables, test, 5);
+			FindAllVariablesInScope(variables, test, 17);
 			break;
 		default:
 			break;
