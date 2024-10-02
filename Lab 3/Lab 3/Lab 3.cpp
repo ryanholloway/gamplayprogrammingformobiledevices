@@ -4,7 +4,7 @@ int main()
 {
 	//vector only used to automate test cases
 	vector<char*> testCases;
-	char code1[1000] = "int main() \n{ \n int vVar1 =10;\n int var_2 =10;\n if(vVar1<10) \n {\n int var3=20;\n} \n}\n";
+	char code1[1000] = "int main() \n{ \n int var1 =10;\n int var_2 =10;\n if(var1<10) \n {\n int var3=20;\n} \n}\n";
 	char code2[1000] = "int main() \n{ \n int a = 1;\n char b = 'c'; \n int x, y;\n int z=5;\n}\n";
 	char code3[1000] = "int init() \n{ \n char first = 'A'; \n char second = 'B';\n int num = 100;\n}\n";
 	char code4[1000] = "char test() \n{ \n int alpha = 9;\n int beta;\n if(alpha == 9)\n {\n char gamma = 'G';\n }\n}\n";
@@ -51,6 +51,10 @@ int main()
 		while (variables[codeIndex] != '\0')
 		{
 			cout << variables[codeIndex];
+			if (variables[codeIndex] == ',')
+			{
+				cout << " ";
+			}
 			codeIndex++;
 		}
 		codeIndex--;

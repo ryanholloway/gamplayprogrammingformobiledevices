@@ -51,18 +51,17 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 	bool notEnd = true;
 	while (code[codeIndex] != '\0')
 	{
-		if (code[codeIndex] == '\n'&&countLines<lineNumber)
+		if (code[codeIndex] == '\n')
 		{
 			countLines++;
 		}
-		if (countLines == lineNumber&&notEnd)
+		if (code[codeIndex] == '{')
 		{
-			if (code[codeIndex] == '}')
-			{
-				notEnd = false;
-			}
-			if ((code[codeIndex] == 'i' && code[codeIndex + 1] == 'n' && code[codeIndex + 2] == 't') ||
-				(code[codeIndex] == 'c' && code[codeIndex + 1] == 'h' && code[codeIndex + 2] == 'a' && code[codeIndex + 3] == 'r'))
+			inFunction = true;
+		}
+		if (inFunction&&countLines<lineNumber)
+		{
+			if ((code[codeIndex] == 'i' && code[codeIndex + 1] == 'n' && code[codeIndex + 2] == 't') || (code[codeIndex] == 'c' && code[codeIndex + 1] == 'h' && code[codeIndex + 2] == 'a' && code[codeIndex + 3] == 'r'))
 			{
 				codeIndex += (code[codeIndex] == 'i') ? 4 : 5; // skip distance based on whether int or char
 
@@ -71,8 +70,7 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 					codeIndex++;
 				}
 
-				while (code[codeIndex] >= 'a' && code[codeIndex] <= 'z' || code[codeIndex] >= 'A' && code[codeIndex] <= 'Z' ||
-					code[codeIndex] >= '0' && code[codeIndex] <= '9' || code[codeIndex] == '_')
+				while (code[codeIndex] >= 'a' && code[codeIndex] <= 'z' || code[codeIndex] >= 'A' && code[codeIndex] <= 'Z' || code[codeIndex] >= '0' && code[codeIndex] <= '9' || code[codeIndex] == '_')
 				{
 					variables[variableIndex] = code[codeIndex];
 					variableIndex++;
@@ -80,7 +78,7 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 				}
 				variables[variableIndex] = ',';
 				variableIndex++;
-				
+
 			}
 		}
 		codeIndex++;
