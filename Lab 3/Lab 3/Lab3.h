@@ -92,9 +92,10 @@ void FindAllVariablesInScope(char variables[1000], char code[1000], int lineNumb
 		}
 		if (ignore && code[codeIndex] == '}')
 		{
-			countBrack--;
+			if (countBrack > 0)
+				countBrack--;
 
-			if (countBrack <= 0)
+			if (countBrack == 0)
 				ignore = false;
 		}
 		codeIndex++;

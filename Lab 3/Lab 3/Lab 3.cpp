@@ -43,7 +43,7 @@ int main()
 			FindAllVariables(variables, test);
 			break;
 		case 2:
-			FindAllVariablesInScope(variables, test, 13);
+			FindAllVariablesInScope(variables, test, 17);
 			break;
 		default:
 			break;
