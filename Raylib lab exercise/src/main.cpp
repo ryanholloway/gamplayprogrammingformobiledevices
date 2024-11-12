@@ -26,84 +26,66 @@ For a C++ project simply rename the file to .cpp and re-run the build script
 
 #include "raylib.h"
 #include "raymath.h"
-#include "resource_dir.h"// utility header for SearchAndSetResourceDir
+#include "resource_dir.h"	// utility header for SearchAndSetResourceDir
 #include <iostream>
-
-void drawArray(int count, int size, int arr[])
-{
-	char textcharArr[4];
-	for (int rectangle = 0; rectangle < size; rectangle++)
-	{
-		Vector2 pos = { 65 * rectangle + 10, 20 };
-		if (rectangle < count)
-		{
-			snprintf(textcharArr, 4, "%d", arr[rectangle]);
-			DrawRectangle(pos.x, pos.y, 60, 60, RED);
-			DrawText(textcharArr, pos.x + 10, pos.y + 20, 25, WHITE);
-		}
-		else
-			DrawRectangleLines(pos.x, pos.y, 60, 60, BLUE);
-	}
-}
-
-void insertElement(int item, int size, int arr[], int& count)
-{
-	if (count < size)
-	{
-		arr[count] = item;
-		count++;
-	}
-}
-void deleteElement(int size, int arr[], int& count)
-{
-	if (count > 0)
-	{
-		count--;
-	}
-}
 
 int main()
 {
-	srand(time(NULL));
+
 	// Tell the window to use vysnc and work on high DPI displays
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
-	int count = 4;
-	int size = 6;
 
-	int array[6] = { 1,34,156,2 };
 	// Create the window and OpenGL context
 	InitWindow(1280, 800, "Hello Raylib");
+	Vector2 vec1 = { 100,100 };
+	Vector2 vec2 = { 200,200 };
+
+	Vector2 mousePos;
+	Vector2 objectPos = { 500,500 };
+
+
 
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
 	SearchAndSetResourceDir("resources");
+
+	// Load a texture from the resources directory
+	Texture wabbit = LoadTexture("wabbit_alpha.png");
+	Texture plane = LoadTexture("ship_0002.png");
+
+	Vector2 textureSize = { (float)plane.width, (float)plane.height };
+
+	Rectangle sourceRec = { 0.0f, 0.0f, textureSize.x, textureSize.y };
+	Rectangle destRec = { objectPos.x, objectPos.y, textureSize.x, textureSize.y };
+	Vector2 origin = { textureSize.x / 2, textureSize.y / 2 };
+
+	float direction;
 
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
 
+
 		// drawing
 		BeginDrawing();
-
+		mousePos = GetMousePosition();
 		// Setup the backbuffer for drawing (clear color and depth buffers)
 		ClearBackground(BLACK);
+		destRec.x = objectPos.x;
+		destRec.y = objectPos.y;
 
-		drawArray(count, size, array);
-		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-		{
-			insertElement(rand() % 999, size, array, count);
-		}
-		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
-		{
-			deleteElement(size, array, count);
-		}
-
-		// draw some text using the default font
-		DrawText("Hello Raylib", 200, 200, 20, WHITE);
+		float angle = atan2(mousePos.y - objectPos.y, mousePos.x - objectPos.x);
+		angle *= RAD2DEG;
+		angle += 90.0f;
 
 
+		DrawTexturePro(plane, sourceRec, destRec, origin, angle, WHITE);
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
 	}
+
+	// cleanup
+	// unload our texture so it can be cleaned up
+	UnloadTexture(wabbit);
 
 	// destory the window and cleanup the OpenGL context
 	CloseWindow();
