@@ -3,19 +3,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "main.h"
+#define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
-#define GRID_SIZE 16      // 16x16 grid
-#define CELL_SIZE 30      // Each cell is 30x30 pixels
+#define GRID_SIZE 32      
+#define CELL_SIZE 15       
 #define SIDEBAR_WIDTH 150
 #define BUTTON_HEIGHT 40
 
 typedef struct PixelData {
 	Vector2 position;
 	Color color;
-}; PixelData;
+} PixelData;
 
-Color colors[] = { RED, GREEN, BLUE };
+// Expanded color palette
+Color colors[] = { RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, DARKBLUE, DARKGREEN, BROWN, PINK, MAROON, BEIGE, SKYBLUE, LIME, VIOLET, WHITE };
 
 void SavePixelArt(const char* filename, PixelData* pixels, int pixelCount) {
 	FILE* file = fopen(filename, "wb");
@@ -46,14 +48,12 @@ PixelData* LoadPixelArt(const char* filename, int* pixelCount) {
 	return pixels;
 }
 
-void saveFile(Color  grid[16][16], const char* filename)
-{
+void saveFile(Color grid[GRID_SIZE][GRID_SIZE], const char* filename) {
 	int pixelCount = 0;
 
-	// Count non-empty cells
 	for (int x = 0; x < GRID_SIZE; x++) {
 		for (int y = 0; y < GRID_SIZE; y++) {
-			if (grid[x][y].a > 0) { // Only save colored cells
+			if (grid[x][y].a > 0) {
 				pixelCount++;
 			}
 		}
@@ -62,11 +62,10 @@ void saveFile(Color  grid[16][16], const char* filename)
 	PixelData* pixels = (PixelData*)malloc(sizeof(PixelData) * pixelCount);
 	int index = 0;
 
-	// Store each colored cell's position and color
 	for (int x = 0; x < GRID_SIZE; x++) {
 		for (int y = 0; y < GRID_SIZE; y++) {
-			if (grid[x][y].a > 0) { // Non-empty cell
-				Vector2 vec = { x,y };
+			if (grid[x][y].a > 0) {
+				Vector2 vec = { x, y };
 				pixels[index].position = vec;
 				pixels[index].color = grid[x][y];
 				index++;
@@ -74,24 +73,20 @@ void saveFile(Color  grid[16][16], const char* filename)
 		}
 	}
 
-	// Save to file
 	SavePixelArt(filename, pixels, pixelCount);
 	free(pixels);
 }
 
-void loadFile(const char* filename, Color  grid[16][16])
-{
+void loadFile(const char* filename, Color grid[GRID_SIZE][GRID_SIZE]) {
 	int pixelCount;
 	PixelData* loadedPixels = LoadPixelArt(filename, &pixelCount);
 
-	// Reset the grid
 	for (int x = 0; x < GRID_SIZE; x++) {
 		for (int y = 0; y < GRID_SIZE; y++) {
-			grid[x][y] = BLANK; // Clear each cell
+			grid[x][y] = BLANK;
 		}
 	}
 
-	// Populate the grid with loaded pixel data
 	for (int i = 0; i < pixelCount; i++) {
 		int x = (int)loadedPixels[i].position.x;
 		int y = (int)loadedPixels[i].position.y;
@@ -101,30 +96,35 @@ void loadFile(const char* filename, Color  grid[16][16])
 	free(loadedPixels);
 }
 
-int main()
-{
-	const char* filename = "pixelart.rch";
-	// Tell the window to use vysnc and work on high DPI displays
-	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+void resetGrid(Color grid[GRID_SIZE][GRID_SIZE]) {
+	for (int x = 0; x < GRID_SIZE; x++) {
+		for (int y = 0; y < GRID_SIZE; y++) {
+			grid[x][y] = BLANK;
+		}
+	}
+}
 
-	// Create the window and OpenGL context
+int main() {
+	const char* filename = "pixelart.rch";
+	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 	InitWindow(GRID_SIZE * CELL_SIZE + SIDEBAR_WIDTH, GRID_SIZE * CELL_SIZE, "Pixel Art Program");
 	SetTargetFPS(60);
 
-	Color grid[GRID_SIZE][GRID_SIZE] = { 0 };  // 2D array to store pixel colors
-	int selectedColorIndex = 0;                // Start with the first color in palette
-	bool clickedSave = false, clickedLoad = false;
-	bool clickedColor1 = false, clickedColor2 = false, clickedColor3 = false;
-	// Main game loop
-	while (!WindowShouldClose()) {
-		// Change color with keys 1-3
-		if (IsKeyPressed(KEY_ONE)) selectedColorIndex = 0;
-		if (IsKeyPressed(KEY_TWO)) selectedColorIndex = 1;
-		if (IsKeyPressed(KEY_THREE)) selectedColorIndex = 2;
+	Color grid[GRID_SIZE][GRID_SIZE] = { 0 };
+	int selectedColorIndex = 0;
 
-		// Draw pixel on grid with mouse click
+	int colorCount = sizeof(colors) / sizeof(colors[0]);
+	int colorsPerColumn = 4;
+	int colorButtonSize = 25;
+
+	// Calculate text position based on the color grid height
+	int rowsNeeded = (colorCount + colorsPerColumn - 1) / colorsPerColumn; // Rounds up to next row if not a full row
+	int sidebarHeight = rowsNeeded * (colorButtonSize + 10);
+
+	while (!WindowShouldClose()) {
+		Vector2 mousePos = GetMousePosition();
+
 		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-			Vector2 mousePos = GetMousePosition();
 			int x = mousePos.x / CELL_SIZE;
 			int y = mousePos.y / CELL_SIZE;
 			if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
@@ -132,25 +132,50 @@ int main()
 			}
 		}
 
-		if (IsKeyPressed(KEY_S)) {
-			saveFile(grid, filename);
-		}
+		for (int i = 0; i < colorCount; i++) {
+			int col = i % colorsPerColumn;
+			int row = i / colorsPerColumn;
+			Rectangle colorRect = { GRID_SIZE * CELL_SIZE + 10 + col * (colorButtonSize + 10), 10 + row * (colorButtonSize + 10), colorButtonSize, colorButtonSize };
 
-		if (IsKeyPressed(KEY_L)) {
-			loadFile(filename, grid);
+			if (CheckCollisionPointRec(mousePos, colorRect) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+				selectedColorIndex = i;
+			}
 		}
 
 		BeginDrawing();
-		ClearBackground(RAYWHITE);
+		ClearBackground(WHITE);
 
 		for (int x = 0; x < GRID_SIZE; x++) {
 			for (int y = 0; y < GRID_SIZE; y++) {
 				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, grid[x][y]);
-				DrawRectangleLines(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, GRAY);
+				DrawRectangleLines(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, BLACK);
 			}
 		}
 
-		DrawText("Press 1 for RED, 2 for GREEN, 3 for BLUE", 10, 10, 10, BLACK);
+		for (int i = 0; i < colorCount; i++) {
+			int col = i % colorsPerColumn;
+			int row = i / colorsPerColumn;
+			Rectangle colorRect = { GRID_SIZE * CELL_SIZE + 10 + col * (colorButtonSize + 10), 10 + row * (colorButtonSize + 10), colorButtonSize, colorButtonSize };
+
+			DrawRectangleRec(colorRect, colors[i]);
+			if (i == selectedColorIndex) {
+				DrawRectangleLinesEx(colorRect, 3, BLACK);
+			}
+		}
+
+		// GUI Buttons for Save, Load, and Reset
+		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 20, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Save")) {
+			saveFile(grid, filename);
+		}
+
+		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 70, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Load")) {
+			loadFile(filename, grid);
+		}
+
+		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10,(float)sidebarHeight + 120, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Reset")) {
+			resetGrid(grid);
+		}
+
 		EndDrawing();
 	}
 
