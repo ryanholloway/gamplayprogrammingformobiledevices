@@ -18,6 +18,8 @@ typedef struct PixelData {
 
 // Expanded color palette
 Color colors[] = { RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, DARKBLUE, DARKGREEN, BROWN, PINK, MAROON, BEIGE, SKYBLUE, LIME, VIOLET, WHITE };
+Color lightGray = Color{ 220, 220, 220, 255 }; // Light gray
+Color darkGray = Color{ 180, 180, 180, 255 }; // Dark gray
 
 void SavePixelArt(const char* filename, PixelData* pixels, int pixelCount) {
 	FILE* file = fopen(filename, "wb");
@@ -112,10 +114,19 @@ int main() {
 
 	Color grid[GRID_SIZE][GRID_SIZE] = { 0 };
 	int selectedColorIndex = 0;
-
+	Color customColor = WHITE;
 	int colorCount = sizeof(colors) / sizeof(colors[0]);
 	int colorsPerColumn = 4;
 	int colorButtonSize = 25;
+
+	// Variables for rectangle drawing
+	Vector2 start, end;
+	bool drawingRect = false;
+
+	// Variables for selection tool (copy/paste)
+	Rectangle selection = { 0 };
+	PixelData* copiedPixels = NULL;
+	int copiedPixelCount = 0;
 
 	// Calculate text position based on the color grid height
 	int rowsNeeded = (colorCount + colorsPerColumn - 1) / colorsPerColumn; // Rounds up to next row if not a full row
@@ -124,14 +135,7 @@ int main() {
 	while (!WindowShouldClose()) {
 		Vector2 mousePos = GetMousePosition();
 
-		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-			int x = mousePos.x / CELL_SIZE;
-			int y = mousePos.y / CELL_SIZE;
-			if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-				grid[x][y] = colors[selectedColorIndex];
-			}
-		}
-
+		// Handle Color Picker
 		for (int i = 0; i < colorCount; i++) {
 			int col = i % colorsPerColumn;
 			int row = i / colorsPerColumn;
@@ -142,16 +146,53 @@ int main() {
 			}
 		}
 
+		// Handle Eraser Button
+		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 20, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Eraser")) {
+			selectedColorIndex = -1;
+		}
+
+		// Handle Save, Load, and Reset
+		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 70, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Save")) {
+			saveFile(grid, filename);
+		}
+		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 120, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Load")) {
+			loadFile(filename, grid);
+		}
+		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 170, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Reset")) {
+			resetGrid(grid);
+		}
+
+		// Drawing grid with alternating background
+		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+			int x = mousePos.x / CELL_SIZE;
+			int y = mousePos.y / CELL_SIZE;
+			if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+				if (selectedColorIndex >= 0) {
+					grid[x][y] = colors[selectedColorIndex];
+				}
+				else {
+					grid[x][y] = BLANK; // Erase
+				}
+			}
+		}
+
+		// Drawing the grid
 		BeginDrawing();
 		ClearBackground(WHITE);
 
 		for (int x = 0; x < GRID_SIZE; x++) {
 			for (int y = 0; y < GRID_SIZE; y++) {
-				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, grid[x][y]);
-				DrawRectangleLines(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, BLACK);
+				// Alternate between gray and white
+				Color cellBackground = ((x + y) % 2 == 0) ? lightGray : darkGray;
+				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, cellBackground); // Background
+				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, grid[x][y]); // Color
+				DrawRectangleLines(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, BLACK); // Grid Lines
 			}
 		}
 
+		DrawText("Pick a color:", GRID_SIZE * CELL_SIZE + 10, sidebarHeight, 20, BLACK);
+
+		// Draw the color grid
 		for (int i = 0; i < colorCount; i++) {
 			int col = i % colorsPerColumn;
 			int row = i / colorsPerColumn;
@@ -163,17 +204,9 @@ int main() {
 			}
 		}
 
-		// GUI Buttons for Save, Load, and Reset
-		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 20, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Save")) {
-			saveFile(grid, filename);
-		}
-
-		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 70, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Load")) {
-			loadFile(filename, grid);
-		}
-
-		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10,(float)sidebarHeight + 120, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Reset")) {
-			resetGrid(grid);
+		// Draw Selection Box
+		if (selection.width > 0 && selection.height > 0) {
+			DrawRectangleLines(selection.x, selection.y, selection.width, selection.height, DARKGRAY);
 		}
 
 		EndDrawing();
