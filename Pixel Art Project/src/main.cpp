@@ -106,6 +106,13 @@ void resetGrid(Color grid[GRID_SIZE][GRID_SIZE]) {
 	}
 }
 
+Color colourSelector(Color grid[GRID_SIZE][GRID_SIZE], Vector2 mousePos) {
+	int x = mousePos.x / CELL_SIZE;
+	int y = mousePos.y / CELL_SIZE;
+
+	return grid[x][y];
+}
+
 int main() {
 	const char* filename = "pixelart.rch";
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
@@ -128,7 +135,8 @@ int main() {
 	// Calculate text position based on the color grid height
 	int rowsNeeded = (colorCount + colorsPerColumn - 1) / colorsPerColumn; // Rounds up to next row if not a full row
 	int sidebarHeight = rowsNeeded * (colorButtonSize + 10);
-
+	bool selectingColor = false;
+	Color selectedColor;
 
 	while (!WindowShouldClose()) {
 		Vector2 mousePos = GetMousePosition();
@@ -140,7 +148,9 @@ int main() {
 			Rectangle colorRect = { GRID_SIZE * CELL_SIZE + 10 + col * (float)(colorButtonSize + 10), 10 + row * (float)(colorButtonSize + 10), colorButtonSize, colorButtonSize };
 
 			if (CheckCollisionPointRec(mousePos, colorRect) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+				selectingColor = false;
 				selectedColorIndex = i;
+
 			}
 		}
 
@@ -165,6 +175,7 @@ int main() {
 			rectToolEnabled = !rectToolEnabled;
 		}
 
+
 		// Start Rectangle Drawing
 		if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && rectToolEnabled) {
 			startX = mousePos.x / CELL_SIZE;
@@ -188,16 +199,44 @@ int main() {
 			endY = mousePos.y / CELL_SIZE;
 		}
 
-		if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDrawing) {
+		if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDrawing && !selectingColor) {
 			isDrawing = false;
 			for (int x = std::min(startX, endX); x <= std::max(startX, endX); x++) {
 				for (int y = std::min(startY, endY); y <= std::max(startY, endY); y++) {
 					if (selectedColorIndex >= 0) {
-						grid[x][y] = colors[selectedColorIndex];
+						selectedColor = colors[selectedColorIndex];
+						grid[x][y] = selectedColor;
 					}
 				}
 			}
 		}
+
+		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+		{
+			selectingColor = true;
+			selectedColor = colourSelector(grid, mousePos);
+		}
+		if (selectingColor)
+		{
+			DrawRectangle(GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 270, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT, selectedColor);
+			DrawText("Selected Color", GRID_SIZE * CELL_SIZE + 35, (float)sidebarHeight + 270 + BUTTON_HEIGHT / 2.0f - 5, 10, BLACK);
+		}
+
+		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && selectingColor) {
+			int x = mousePos.x / CELL_SIZE;
+			int y = mousePos.y / CELL_SIZE;
+			if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+				if (selectedColorIndex >= 0) {
+					grid[x][y] = selectedColor;
+				}
+				else {
+					grid[x][y] = BLANK; // Erase
+				}
+			}
+		}
+
+
+
 
 		// Drawing the grid
 		BeginDrawing();
