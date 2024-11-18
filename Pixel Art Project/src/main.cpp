@@ -6,8 +6,8 @@
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
-#define GRID_SIZE 32      
-#define CELL_SIZE 15       
+#define GRID_SIZE 32
+#define CELL_SIZE 15
 #define SIDEBAR_WIDTH 150
 #define BUTTON_HEIGHT 40
 
@@ -119,18 +119,16 @@ int main() {
 	int colorsPerColumn = 4;
 	int colorButtonSize = 25;
 
-	// Variables for rectangle drawing
-	Vector2 start, end;
-	bool drawingRect = false;
-
-	// Variables for selection tool (copy/paste)
-	Rectangle selection = { 0 };
-	PixelData* copiedPixels = NULL;
-	int copiedPixelCount = 0;
+	// Variables for rectangle tool
+	int startX = -1, startY = -1;
+	bool isDrawing = false;
+	bool rectToolEnabled = false;
+	int endX, endY;
 
 	// Calculate text position based on the color grid height
 	int rowsNeeded = (colorCount + colorsPerColumn - 1) / colorsPerColumn; // Rounds up to next row if not a full row
 	int sidebarHeight = rowsNeeded * (colorButtonSize + 10);
+
 
 	while (!WindowShouldClose()) {
 		Vector2 mousePos = GetMousePosition();
@@ -139,7 +137,7 @@ int main() {
 		for (int i = 0; i < colorCount; i++) {
 			int col = i % colorsPerColumn;
 			int row = i / colorsPerColumn;
-			Rectangle colorRect = { GRID_SIZE * CELL_SIZE + 10 + col * (colorButtonSize + 10), 10 + row * (colorButtonSize + 10), colorButtonSize, colorButtonSize };
+			Rectangle colorRect = { GRID_SIZE * CELL_SIZE + 10 + col * (float)(colorButtonSize + 10), 10 + row * (float)(colorButtonSize + 10), colorButtonSize, colorButtonSize };
 
 			if (CheckCollisionPointRec(mousePos, colorRect) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
 				selectedColorIndex = i;
@@ -149,6 +147,7 @@ int main() {
 		// Handle Eraser Button
 		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 20, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Eraser")) {
 			selectedColorIndex = -1;
+			rectToolEnabled = false;
 		}
 
 		// Handle Save, Load, and Reset
@@ -162,8 +161,17 @@ int main() {
 			resetGrid(grid);
 		}
 
-		// Drawing grid with alternating background
-		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 220, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Rectangle")) {
+			rectToolEnabled = !rectToolEnabled;
+		}
+
+		// Start Rectangle Drawing
+		if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && rectToolEnabled) {
+			startX = mousePos.x / CELL_SIZE;
+			startY = mousePos.y / CELL_SIZE;
+			isDrawing = true;
+		}
+		else if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !rectToolEnabled) {
 			int x = mousePos.x / CELL_SIZE;
 			int y = mousePos.y / CELL_SIZE;
 			if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
@@ -172,6 +180,21 @@ int main() {
 				}
 				else {
 					grid[x][y] = BLANK; // Erase
+				}
+			}
+		}
+		if (isDrawing && IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+			endX = mousePos.x / CELL_SIZE;
+			endY = mousePos.y / CELL_SIZE;
+		}
+
+		if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDrawing) {
+			isDrawing = false;
+			for (int x = std::min(startX, endX); x <= std::max(startX, endX); x++) {
+				for (int y = std::min(startY, endY); y <= std::max(startY, endY); y++) {
+					if (selectedColorIndex >= 0) {
+						grid[x][y] = colors[selectedColorIndex];
+					}
 				}
 			}
 		}
@@ -186,7 +209,6 @@ int main() {
 				Color cellBackground = ((x + y) % 2 == 0) ? lightGray : darkGray;
 				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, cellBackground); // Background
 				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, grid[x][y]); // Color
-				//DrawRectangleLines(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, BLACK); // Grid Lines
 			}
 		}
 
@@ -202,11 +224,6 @@ int main() {
 			if (i == selectedColorIndex) {
 				DrawRectangleLinesEx(colorRect, 3, BLACK);
 			}
-		}
-
-		// Draw Selection Box
-		if (selection.width > 0 && selection.height > 0) {
-			DrawRectangleLines(selection.x, selection.y, selection.width, selection.height, DARKGRAY);
 		}
 
 		EndDrawing();
