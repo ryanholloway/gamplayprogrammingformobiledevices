@@ -117,7 +117,7 @@ int main() {
 	const char* filename = "pixelart.rch";
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 	InitWindow(GRID_SIZE * CELL_SIZE + SIDEBAR_WIDTH, GRID_SIZE * CELL_SIZE, "Pixel Art Program");
-	SetTargetFPS(60);
+	SetTargetFPS(155);
 
 	Color grid[GRID_SIZE][GRID_SIZE] = { 0 };
 	int selectedColorIndex = 0;
@@ -182,7 +182,7 @@ int main() {
 			startY = mousePos.y / CELL_SIZE;
 			isDrawing = true;
 		}
-		else if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !rectToolEnabled) {
+		else if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !rectToolEnabled && !selectingColor) {
 			int x = mousePos.x / CELL_SIZE;
 			int y = mousePos.y / CELL_SIZE;
 			if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
@@ -199,13 +199,22 @@ int main() {
 			endY = mousePos.y / CELL_SIZE;
 		}
 
-		if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDrawing && !selectingColor) {
+		if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDrawing) {
 			isDrawing = false;
 			for (int x = std::min(startX, endX); x <= std::max(startX, endX); x++) {
 				for (int y = std::min(startY, endY); y <= std::max(startY, endY); y++) {
 					if (selectedColorIndex >= 0) {
-						selectedColor = colors[selectedColorIndex];
-						grid[x][y] = selectedColor;
+						if (selectingColor)
+						{
+							grid[x][y] = selectedColor;
+
+						}
+						else
+						{
+							grid[x][y] = colors[selectedColorIndex];
+						}
+
+
 					}
 				}
 			}
@@ -213,6 +222,7 @@ int main() {
 
 		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
 		{
+			selectedColorIndex = 0;
 			selectingColor = true;
 			selectedColor = colourSelector(grid, mousePos);
 		}
@@ -222,7 +232,7 @@ int main() {
 			DrawText("Selected Color", GRID_SIZE * CELL_SIZE + 35, (float)sidebarHeight + 270 + BUTTON_HEIGHT / 2.0f - 5, 10, BLACK);
 		}
 
-		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && selectingColor) {
+		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && selectingColor && !rectToolEnabled) {
 			int x = mousePos.x / CELL_SIZE;
 			int y = mousePos.y / CELL_SIZE;
 			if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
