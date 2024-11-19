@@ -5,6 +5,7 @@
 #include "main.h"
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#include <fstream>
 
 #define GRID_SIZE 32
 #define CELL_SIZE 15
@@ -22,18 +23,27 @@ Color lightGray = Color{ 220, 220, 220, 255 }; // Light gray
 Color darkGray = Color{ 180, 180, 180, 255 }; // Dark gray
 
 void saveFile(int grid[GRID_SIZE][GRID_SIZE], const char* filename) {
-	FILE* file = fopen(filename, "wb");
+	std::ofstream file(filename);
 	if (!file) return;
-	fwrite(grid, sizeof(int), GRID_SIZE * GRID_SIZE, file);
-	fclose(file);
+
+	for (int i = 0; i < GRID_SIZE; ++i) {
+		for (int j = 0; j < GRID_SIZE; ++j) {
+			file << grid[i][j];
+			if (j < GRID_SIZE - 1) file << " ";
+		}
+		file << "\n";
+	}
 }
 
 void loadFile(const char* filename, int grid[GRID_SIZE][GRID_SIZE]) {
-	FILE* file = fopen(filename, "rb");
+	std::ifstream file(filename);
 	if (!file) return;
 
-	fread(grid, sizeof(int), GRID_SIZE * GRID_SIZE, file);
-	fclose(file);
+	for (int i = 0; i < GRID_SIZE; ++i) {
+		for (int j = 0; j < GRID_SIZE; ++j) {
+			file >> grid[i][j];
+		}
+	}
 }
 
 void resetGrid(int grid[GRID_SIZE][GRID_SIZE]) {
