@@ -24,7 +24,6 @@ Color darkGray = Color{ 180, 180, 180, 255 }; // Dark gray
 void saveFile(int grid[GRID_SIZE][GRID_SIZE], const char* filename) {
 	FILE* file = fopen(filename, "wb");
 	if (!file) return;
-
 	fwrite(grid, sizeof(int), GRID_SIZE * GRID_SIZE, file);
 	fclose(file);
 }
@@ -56,13 +55,16 @@ int main() {
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 	InitWindow(GRID_SIZE * CELL_SIZE + SIDEBAR_WIDTH, GRID_SIZE * CELL_SIZE, "Pixel Art Program");
 	SetTargetFPS(155);
-
+	Color background = WHITE;
 	int grid[GRID_SIZE][GRID_SIZE] = { 0 };
 	int selectedColorIndex = 0;
 	Color customColor = WHITE;
 	int colorCount = sizeof(colors) / sizeof(colors[0]);
 	int colorsPerColumn = 4;
 	int colorButtonSize = 25;
+
+
+	bool darkmode = false;
 
 	// Variables for rectangle tool
 	int startX = -1, startY = -1;
@@ -108,7 +110,10 @@ int main() {
 		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 220, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Rectangle")) {
 			rectToolEnabled = !rectToolEnabled;
 		}
-
+		if (GuiButton(Rectangle{ GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 270, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, "Toggle Dark Mode"))
+		{
+			darkmode = !darkmode;
+		}
 
 		// Start Rectangle Drawing
 		if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && rectToolEnabled) {
@@ -146,18 +151,32 @@ int main() {
 				}
 			}
 		}
+
+		switch (darkmode)
+		{
+		case true:
+			background = BLACK;
+			break;
+		case false:
+			background = RAYWHITE;
+			break;
+		default:
+			background = RAYWHITE;
+			break;
+		}
+
 		// Drawing the grid
 		BeginDrawing();
-		ClearBackground(WHITE);
+
+		ClearBackground(background);
 
 		for (int x = 0; x < GRID_SIZE; x++) {
 			for (int y = 0; y < GRID_SIZE; y++) {
 				// Alternate between gray and white
 				Color cellBackground = ((x + y) % 2 == 0) ? lightGray : darkGray;
-				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, cellBackground); // Background
-				switch (grid[x][y])
+				if (grid[x][y] < 0) //dont draw if there is something on the grid
 				{
-
+					DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, cellBackground); // Background
 				}
 				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, colors[grid[x][y]]); // Color
 			}
