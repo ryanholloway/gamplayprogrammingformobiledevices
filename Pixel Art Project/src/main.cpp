@@ -21,95 +21,33 @@ Color colors[] = { RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, DARKBLUE, DARKGREEN
 Color lightGray = Color{ 220, 220, 220, 255 }; // Light gray
 Color darkGray = Color{ 180, 180, 180, 255 }; // Dark gray
 
-void SavePixelArt(const char* filename, PixelData* pixels, int pixelCount) {
+void saveFile(int grid[GRID_SIZE][GRID_SIZE], const char* filename) {
 	FILE* file = fopen(filename, "wb");
-	if (file == NULL) return;
+	if (!file) return;
 
-	fwrite(&pixelCount, sizeof(int), 1, file);
-	for (int i = 0; i < pixelCount; i++) {
-		fwrite(&pixels[i].position, sizeof(Vector2), 1, file);
-		fwrite(&pixels[i].color, sizeof(Color), 1, file);
-	}
-
+	fwrite(grid, sizeof(int), GRID_SIZE * GRID_SIZE, file);
 	fclose(file);
 }
 
-PixelData* LoadPixelArt(const char* filename, int* pixelCount) {
+void loadFile(const char* filename, int grid[GRID_SIZE][GRID_SIZE]) {
 	FILE* file = fopen(filename, "rb");
-	if (file == NULL) return NULL;
+	if (!file) return;
 
-	fread(pixelCount, sizeof(int), 1, file);
-	PixelData* pixels = (PixelData*)malloc(sizeof(PixelData) * (*pixelCount));
-
-	for (int i = 0; i < *pixelCount; i++) {
-		fread(&pixels[i].position, sizeof(Vector2), 1, file);
-		fread(&pixels[i].color, sizeof(Color), 1, file);
-	}
-
+	fread(grid, sizeof(int), GRID_SIZE * GRID_SIZE, file);
 	fclose(file);
-	return pixels;
 }
 
-void saveFile(Color grid[GRID_SIZE][GRID_SIZE], const char* filename) {
-	int pixelCount = 0;
-
+void resetGrid(int grid[GRID_SIZE][GRID_SIZE]) {
 	for (int x = 0; x < GRID_SIZE; x++) {
 		for (int y = 0; y < GRID_SIZE; y++) {
-			if (grid[x][y].a > 0) {
-				pixelCount++;
-			}
-		}
-	}
-
-	PixelData* pixels = (PixelData*)malloc(sizeof(PixelData) * pixelCount);
-	int index = 0;
-
-	for (int x = 0; x < GRID_SIZE; x++) {
-		for (int y = 0; y < GRID_SIZE; y++) {
-			if (grid[x][y].a > 0) {
-				Vector2 vec = { x, y };
-				pixels[index].position = vec;
-				pixels[index].color = grid[x][y];
-				index++;
-			}
-		}
-	}
-
-	SavePixelArt(filename, pixels, pixelCount);
-	free(pixels);
-}
-
-void loadFile(const char* filename, Color grid[GRID_SIZE][GRID_SIZE]) {
-	int pixelCount;
-	PixelData* loadedPixels = LoadPixelArt(filename, &pixelCount);
-
-	for (int x = 0; x < GRID_SIZE; x++) {
-		for (int y = 0; y < GRID_SIZE; y++) {
-			grid[x][y] = BLANK;
-		}
-	}
-
-	for (int i = 0; i < pixelCount; i++) {
-		int x = (int)loadedPixels[i].position.x;
-		int y = (int)loadedPixels[i].position.y;
-		grid[x][y] = loadedPixels[i].color;
-	}
-
-	free(loadedPixels);
-}
-
-void resetGrid(Color grid[GRID_SIZE][GRID_SIZE]) {
-	for (int x = 0; x < GRID_SIZE; x++) {
-		for (int y = 0; y < GRID_SIZE; y++) {
-			grid[x][y] = BLANK;
+			grid[x][y] = -1;
 		}
 	}
 }
 
-Color colourSelector(Color grid[GRID_SIZE][GRID_SIZE], Vector2 mousePos) {
+int colourSelector(int grid[GRID_SIZE][GRID_SIZE], Vector2 mousePos) {
 	int x = mousePos.x / CELL_SIZE;
 	int y = mousePos.y / CELL_SIZE;
-
 	return grid[x][y];
 }
 
@@ -119,7 +57,7 @@ int main() {
 	InitWindow(GRID_SIZE * CELL_SIZE + SIDEBAR_WIDTH, GRID_SIZE * CELL_SIZE, "Pixel Art Program");
 	SetTargetFPS(155);
 
-	Color grid[GRID_SIZE][GRID_SIZE] = { 0 };
+	int grid[GRID_SIZE][GRID_SIZE] = { 0 };
 	int selectedColorIndex = 0;
 	Color customColor = WHITE;
 	int colorCount = sizeof(colors) / sizeof(colors[0]);
@@ -135,9 +73,7 @@ int main() {
 	// Calculate text position based on the color grid height
 	int rowsNeeded = (colorCount + colorsPerColumn - 1) / colorsPerColumn; // Rounds up to next row if not a full row
 	int sidebarHeight = rowsNeeded * (colorButtonSize + 10);
-	bool selectingColor = false;
-	Color selectedColor;
-
+	resetGrid(grid);
 	while (!WindowShouldClose()) {
 		Vector2 mousePos = GetMousePosition();
 
@@ -148,9 +84,7 @@ int main() {
 			Rectangle colorRect = { GRID_SIZE * CELL_SIZE + 10 + col * (float)(colorButtonSize + 10), 10 + row * (float)(colorButtonSize + 10), colorButtonSize, colorButtonSize };
 
 			if (CheckCollisionPointRec(mousePos, colorRect) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-				selectingColor = false;
 				selectedColorIndex = i;
-
 			}
 		}
 
@@ -182,15 +116,15 @@ int main() {
 			startY = mousePos.y / CELL_SIZE;
 			isDrawing = true;
 		}
-		else if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !rectToolEnabled && !selectingColor) {
+		else if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !rectToolEnabled) {
 			int x = mousePos.x / CELL_SIZE;
 			int y = mousePos.y / CELL_SIZE;
 			if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
 				if (selectedColorIndex >= 0) {
-					grid[x][y] = colors[selectedColorIndex];
+					grid[x][y] = selectedColorIndex;
 				}
 				else {
-					grid[x][y] = BLANK; // Erase
+					grid[x][y] = -1; // Erase
 				}
 			}
 		}
@@ -198,56 +132,20 @@ int main() {
 			endX = mousePos.x / CELL_SIZE;
 			endY = mousePos.y / CELL_SIZE;
 		}
-
+		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+		{
+			selectedColorIndex = colourSelector(grid, mousePos);
+		}
 		if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDrawing) {
 			isDrawing = false;
 			for (int x = std::min(startX, endX); x <= std::max(startX, endX); x++) {
 				for (int y = std::min(startY, endY); y <= std::max(startY, endY); y++) {
 					if (selectedColorIndex >= 0) {
-						if (selectingColor)
-						{
-							grid[x][y] = selectedColor;
-
-						}
-						else
-						{
-							grid[x][y] = colors[selectedColorIndex];
-						}
-
-
+						grid[x][y] = selectedColorIndex;
 					}
 				}
 			}
 		}
-
-		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
-		{
-			selectedColorIndex = 0;
-			selectingColor = true;
-			selectedColor = colourSelector(grid, mousePos);
-		}
-		if (selectingColor)
-		{
-			DrawRectangle(GRID_SIZE * CELL_SIZE + 10, (float)sidebarHeight + 270, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT, selectedColor);
-			DrawText("Selected Color", GRID_SIZE * CELL_SIZE + 35, (float)sidebarHeight + 270 + BUTTON_HEIGHT / 2.0f - 5, 10, BLACK);
-		}
-
-		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && selectingColor && !rectToolEnabled) {
-			int x = mousePos.x / CELL_SIZE;
-			int y = mousePos.y / CELL_SIZE;
-			if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-				if (selectedColorIndex >= 0) {
-					grid[x][y] = selectedColor;
-				}
-				else {
-					grid[x][y] = BLANK; // Erase
-				}
-			}
-		}
-
-
-
-
 		// Drawing the grid
 		BeginDrawing();
 		ClearBackground(WHITE);
@@ -257,7 +155,11 @@ int main() {
 				// Alternate between gray and white
 				Color cellBackground = ((x + y) % 2 == 0) ? lightGray : darkGray;
 				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, cellBackground); // Background
-				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, grid[x][y]); // Color
+				switch (grid[x][y])
+				{
+
+				}
+				DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, colors[grid[x][y]]); // Color
 			}
 		}
 
