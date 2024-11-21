@@ -1,4 +1,4 @@
-#include "Header.h"
+#include "Lab1.h"
 // Test for Questions 1 to 8
 
 int main()
