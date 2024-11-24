@@ -10,10 +10,12 @@
 #include <fstream>
 #include <vector>
 
-#define GRID_SIZE 32
-#define CELL_SIZE 15
+#define GRID_SIZE 64
+#define CELL_SIZE 8
 #define SIDEBAR_WIDTH 150
 #define BUTTON_HEIGHT 30
+
+const char* filename = "pixelart.rch";
 
 typedef struct CopiedRect {
 	int width, height;
@@ -59,7 +61,7 @@ void resetGrid(int grid[GRID_SIZE][GRID_SIZE]) {
 }
 
 int colourSelector(int grid[GRID_SIZE][GRID_SIZE], Vector2 mousePos) {
-	int x = mousePos.x / CELL_SIZE;
+	int x = (mousePos.x - SIDEBAR_WIDTH) / CELL_SIZE;
 	int y = mousePos.y / CELL_SIZE;
 	return grid[x][y];
 }
@@ -178,7 +180,8 @@ void guiButtons(int sidebarHeight, int& selectedColour, int  grid[GRID_SIZE][GRI
 }
 
 int main() {
-	const char* filename = "pixelart.rch";
+
+
 	SetConfigFlags(FLAG_WINDOW_HIGHDPI);
 
 	InitWindow(GRID_SIZE * CELL_SIZE + SIDEBAR_WIDTH, GRID_SIZE * CELL_SIZE, "Pixel Art Program");
