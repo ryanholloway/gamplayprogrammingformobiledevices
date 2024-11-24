@@ -17,6 +17,7 @@
 
 const char* filename = "pixelart.rch";
 
+
 typedef struct CopiedRect {
 	int width, height;
 	std::vector<std::vector<int>> data;
@@ -27,6 +28,8 @@ typedef struct CopiedRect {
 Color colors[] = { RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, DARKBLUE, DARKGREEN, BROWN, PINK, MAROON, BLACK, SKYBLUE, LIME, VIOLET, WHITE };
 Color lightGrey = Color{ 220, 220, 220, 255 }; // Light grey
 Color darkGrey = Color{ 180, 180, 180, 255 }; // Dark grey
+
+
 
 void saveFile(int grid[GRID_SIZE][GRID_SIZE], const char* filename) {
 	std::ofstream file(filename);
@@ -147,33 +150,34 @@ void drawColourSelector(int colourCount, int colorsPerColumn, int colorButtonSiz
 	}
 }
 
-void guiButtons(int sidebarHeight, int& selectedColour, int  grid[GRID_SIZE][GRID_SIZE], const char* filename, bool& rectToolEnabled, bool& copying, bool& darkmode)
+void guiButtons(int sidebarHeight, int& selectedColour, int  grid[GRID_SIZE][GRID_SIZE], bool& rectToolEnabled, bool& copying, bool& darkmode)
 {
 	// Handle Eraser Button
-	if (GuiButton(Rectangle{ 10, (float)sidebarHeight + 20.0f, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(0xE0B0, " Eraser"))) {
+	if (GuiButton(Rectangle{ 10, (float)sidebarHeight + 20.0f, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(GuiIconName::ICON_RUBBER, " Eraser"))) {
 		selectedColour = -1;
 	}
 	// Handle Save, Load, and Reset
-	if (GuiButton(Rectangle{  10, (float)sidebarHeight + 55, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(0xE0B1, " Save"))) {
+	if (GuiButton(Rectangle{  10, (float)sidebarHeight + 55, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(GuiIconName::ICON_FILE_SAVE_CLASSIC, " Save"))) {
 		saveFile(grid, filename);
 	}
-	if (GuiButton(Rectangle{  + 10, (float)sidebarHeight + 90, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(0xE0B2, " Load"))) {
+	if (GuiButton(Rectangle{  + 10, (float)sidebarHeight + 90, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(GuiIconName::ICON_FILE_OPEN, " Load"))) {
 		loadFile(filename, grid);
 	}
-	if (GuiButton(Rectangle{  10, (float)sidebarHeight + 125, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(0xE0B3, " Reset"))) {
+	if (GuiButton(Rectangle{  10, (float)sidebarHeight + 125, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(GuiIconName::ICON_ALPHA_CLEAR, " Reset"))) {
 		resetGrid(grid);
 	}
 	//Rectangle Tool
-	if (GuiButton(Rectangle{  10, (float)sidebarHeight + 160, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(0xE0B4, " Rectangle"))) {
+	if (GuiButton(Rectangle{  10, (float)sidebarHeight + 160, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(GuiIconName::ICON_BOX, " Rectangle"))) {
 		rectToolEnabled = !rectToolEnabled;
 	}
 	//Selector tool
-	if (GuiButton(Rectangle{  10, (float)sidebarHeight + 195.0f, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(0xE0B5, " Selector")))
+	if (GuiButton(Rectangle{  10, (float)sidebarHeight + 195.0f, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(GuiIconName::ICON_CROP, " Selector")))
 	{
+		rectToolEnabled = false;
 		copying = true;
 	}
 	//dark mode
-	if (GuiButton(Rectangle{  10, (float)sidebarHeight + 230, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(0xE0B6, " Dark Mode")))
+	if (GuiButton(Rectangle{  10, (float)sidebarHeight + 230, SIDEBAR_WIDTH - 20, BUTTON_HEIGHT }, GuiIconText(GuiIconName::ICON_CAMERA, " Dark Mode")))
 	{
 		darkmode = !darkmode;
 	}
@@ -185,7 +189,6 @@ int main() {
 	SetConfigFlags(FLAG_WINDOW_HIGHDPI);
 
 	InitWindow(GRID_SIZE * CELL_SIZE + SIDEBAR_WIDTH, GRID_SIZE * CELL_SIZE, "Pixel Art Program");
-
 	GuiLoadStyleDefault();
 
 	Color background = WHITE;
@@ -306,7 +309,7 @@ int main() {
 
 		DrawText("Pick a colour:", 8, sidebarHeight, 20, BLACK);
 		drawColourSelector(colourCount, colorsPerColumn, colorButtonSize, selectedColour);
-		guiButtons(sidebarHeight, selectedColour, grid, filename, rectToolEnabled, copying, darkmode);
+		guiButtons(sidebarHeight, selectedColour, grid, rectToolEnabled, copying, darkmode);
 		EndDrawing();
 	}
 
